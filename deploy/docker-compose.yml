@@ -3,6 +3,8 @@ services:
     image: ghcr.io/joey-barbier/ipascanner:${IMAGE_TAG:-latest}
     container_name: ipascanner
     restart: unless-stopped
+    ports:
+      - "8083:8080"  # Expose port 8080 internal to 8083 external
     environment:
       # Environment variables
       ENV: ${ENV:-production}
