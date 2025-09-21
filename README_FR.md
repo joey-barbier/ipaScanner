@@ -133,6 +133,12 @@ swift test --verbose
 
 ## 🛠 Développement
 
+⚠️ **État Actuel**: Ce code est actuellement en état "vibe-codé" et nécessite un nettoyage pour respecter les bonnes pratiques Swift 6.2. Travail futur inclut :
+- Conformité Sendable appropriée pour tous les types
+- Migration complète async/await  
+- Amélioration des patterns de gestion d'erreurs
+- Audit complet de la sécurité de concurrence
+
 ### Conventions de Code
 
 - Architecture modulaire

@@ -174,35 +174,41 @@ swift test --filter IPAFoundationTests
 - **Assets non compressés** : Fichiers texte volumineux non compressés
 - **Frameworks volumineux** : Identification des dépendances lourdes
 
-## 🛠 Développement
+## 🛠 Development
 
-### Environnement de développement
+⚠️ **Current Status**: This codebase is currently in "vibe-coded" state and requires cleanup for proper Swift 6.2 best practices. Future work includes:
+- Proper Sendable conformance across all types
+- Complete async/await migration  
+- Enhanced error handling patterns
+- Full concurrency safety audit
+
+### Development Environment
 
 ```bash
-# Compiler en mode debug
+# Compile in debug mode
 swift build
 
-# Lancer l'outil en développement  
+# Run tool in development
 swift run ipascanner analyze example.ipa
 
-# Générer la documentation
+# Generate documentation
 swift package generate-documentation
 ```
 
 ### Contribution
 
-1. Fork le projet
-2. Créer une branche feature (`git checkout -b feature/amazing-feature`)
-3. Commit les changements (`git commit -m 'add(scope) - Description du commit'`)
-4. Push vers la branche (`git push origin feature/amazing-feature`)
-5. Ouvrir une Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'add(scope) - Description'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-### Standards de code
+### Code Standards
 
-- Architecture modulaire avec séparation des responsabilités
-- Tests unitaires pour toute nouvelle fonctionnalité
-- Documentation des APIs publiques
-- Style de commit : `add/update/delete(scope) - Description`
+- Modular architecture with clear separation of concerns
+- Unit tests required for new functionality
+- Public API documentation
+- Commit style: `add/update/delete(scope) - Description`
 
 ## 🔒 Sécurité
 
