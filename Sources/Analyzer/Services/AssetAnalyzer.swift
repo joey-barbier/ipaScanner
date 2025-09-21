@@ -1,6 +1,6 @@
 import Foundation
 import IPAFoundation
-import CryptoKit
+import Crypto
 
 // Simplified version with reliable timeout handling
 public class AssetAnalyzer {
