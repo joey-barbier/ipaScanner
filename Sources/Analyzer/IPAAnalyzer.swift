@@ -63,7 +63,7 @@ public class IPAAnalyzer: IPAAnalyzerProtocol {
         progressCallback?("Deep analyzing Assets.car files...", 90)
         
         // Analyze Assets.car files for deep optimization insights  
-        let carAnalysisResults = try analyzeAssetCars(in: content, progressCallback: progressCallback)
+        let carAnalysisResults = try await analyzeAssetCars(in: content, progressCallback: progressCallback)
         
         // Analyze main executable with detailed binary analysis
         let executableFile = content.files.first { $0.category == .executable }
@@ -255,7 +255,7 @@ public class IPAAnalyzer: IPAAnalyzerProtocol {
         return nil
     }
     
-    private func analyzeAssetCars(in content: IPAContent, progressCallback: ProgressCallback?) throws -> [CarAnalysisResult] {
+    private func analyzeAssetCars(in content: IPAContent, progressCallback: ProgressCallback?) async throws -> [CarAnalysisResult] {
         let carFiles = content.files.filter { $0.path.hasSuffix(".car") }
         var results: [CarAnalysisResult] = []
         
@@ -275,7 +275,7 @@ public class IPAAnalyzer: IPAAnalyzerProtocol {
             
             do {
                 // Use the existing AssetAnalyzer with detailed analysis
-                let result = try self.assetAnalyzer.analyzeCarFile(at: fullPath)
+                let result = try await self.assetAnalyzer.analyzeCarFile(at: fullPath)
                 results.append(result)
                 
                 let duplicateCount = result.duplicates.count

@@ -3,18 +3,15 @@ import IPAFoundation
 import Crypto
 
 // Simplified version with reliable timeout handling
-public class AssetAnalyzer {
+public actor AssetAnalyzer: Sendable {
     
     // Cache for content hashes to avoid recomputation
     private var hashCache: [String: String] = [:]
-    private let cacheQueue = DispatchQueue(label: "asset.analyzer.cache", attributes: .concurrent)
     
     public init() {}
     
     public func clearCache() {
-        cacheQueue.async(flags: .barrier) {
-            self.hashCache.removeAll()
-        }
+        hashCache.removeAll()
     }
     
     public func analyzeCarFile(at path: String) throws -> CarAnalysisResult {
@@ -179,24 +176,20 @@ public class AssetAnalyzer {
         // Create cache key to avoid recomputing identical hashes
         let cacheKey = "\(sha1)-\(type)-\(size)"
         
-        // Check cache first (thread-safe read)
-        return cacheQueue.sync {
-            if let cachedHash = hashCache[cacheKey] {
-                return cachedHash
-            }
-            
-            // Generate new hash if not in cache
-            let contentData = cacheKey.data(using: .utf8) ?? Data()
-            let sha256Hash = SHA256.hash(data: contentData)
-            let hashString = sha256Hash.map { String(format: "%02x", $0) }.joined()
-            
-            // Store in cache (barrier write to ensure thread safety)
-            cacheQueue.async(flags: .barrier) {
-                self.hashCache[cacheKey] = hashString
-            }
-            
-            return hashString
+        // Check cache first
+        if let cachedHash = hashCache[cacheKey] {
+            return cachedHash
         }
+        
+        // Generate new hash if not in cache
+        let contentData = cacheKey.data(using: .utf8) ?? Data()
+        let sha256Hash = SHA256.hash(data: contentData)
+        let hashString = sha256Hash.map { String(format: "%02x", $0) }.joined()
+        
+        // Store in cache
+        hashCache[cacheKey] = hashString
+        
+        return hashString
     }
     
     
