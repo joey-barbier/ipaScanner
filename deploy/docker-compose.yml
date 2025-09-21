@@ -1,6 +1,6 @@
 services:
   ipascanner:
-    image: ghcr.io/orka-pw/ipascanner:latest
+    image: ghcr.io/joey-barbier/ipascanner:${IMAGE_TAG:-latest}
     container_name: ipascanner
     restart: unless-stopped
     environment:

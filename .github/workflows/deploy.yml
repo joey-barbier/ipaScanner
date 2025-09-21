@@ -1,0 +1,97 @@
+name: Build & Deploy IPA Scanner
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/joey-barbier/ipascanner
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # Setup Docker buildx
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      # Login to GitHub Container Registry
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Build and push Docker image
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    environment: PROD
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      
+      # Login to GitHub Container Registry on self-hosted runner
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Deploy IPA Scanner
+        run: |
+          # Create data directories
+          sudo mkdir -p /var/www/ipascanner-data/uploads
+          sudo mkdir -p /var/www/ipascanner-data/temp
+          sudo chown -R $USER:$USER /var/www/ipascanner-data
+          sudo chmod -R 777 /var/www/ipascanner-data
+          
+          # Create .env file for docker-compose
+          cat > deploy/.env << EOF
+          # Application settings
+          PORT=${{ vars.PORT || '8083' }}
+          HOST=${{ vars.HOST || '0.0.0.0' }}
+          BASE_URL=${{ vars.BASE_URL || 'https://ipascanner.app' }}
+          
+          # Environment
+          ENV=${{ vars.ENV || 'production' }}
+          LOG_LEVEL=${{ vars.LOG_LEVEL || 'info' }}
+          
+          # Upload limits
+          MAX_UPLOAD_SIZE=${{ vars.MAX_UPLOAD_SIZE || '500' }}
+          UPLOAD_TIMEOUT=${{ vars.UPLOAD_TIMEOUT || '300' }}
+          
+          # Image tag
+          IMAGE_TAG=${{ github.sha }}
+          EOF
+          
+          # Deploy with docker-compose
+          docker compose -f deploy/docker-compose.yml down || true
+          docker compose -f deploy/docker-compose.yml pull
+          docker compose -f deploy/docker-compose.yml up -d
+          
+          # Clean up .env file
+          rm -f deploy/.env
+          
+          # Health check
+          sleep 5
+          docker compose -f deploy/docker-compose.yml ps
+          
+          echo "✅ IPA Scanner deployed successfully!"
