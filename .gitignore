@@ -1,0 +1,74 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+*.xcodeproj
+*.xcworkspace
+.index-build/
+*.dSYM
+.package.resolved
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+*.ipa
+test-ipas/
+temp/
+output/
+
+# Build artifacts
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+
+# Logs
+*.log
+logs/
+
+# Node.js (for frontend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+.env.local
+.env.*.local
+
+# Environment files
+.env
+.env.production
+.env.development
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Vapor
+Public/uploads/
+Resources/Views/cache/
+.vapor/
+Run/
+
+# Docker
+docker-compose.override.yml
+
+# Web uploads
+uploads/
+*.tmp
+tmp/
+
+# Claude AI
+claude/
+.claude/

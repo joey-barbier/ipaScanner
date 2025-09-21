@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#(title) | IPA Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .progress-bar { transition: width 0.3s ease-in-out; }
+        .collapsible { cursor: pointer; }
+        .collapsible.active + .content { max-height: 1000px; }
+        .content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+    #export("head")
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-mobile-alt text-white text-2xl"></i>
+                    <h1 class="text-white text-xl font-bold">IPA Scanner</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-white hover:text-gray-200 text-sm">
+                        <i class="fas fa-home mr-1"></i>Home
+                    </a>
+                    <a href="/history" class="text-white hover:text-gray-200 text-sm">
+                        <i class="fas fa-history mr-1"></i>History
+                    </a>
+                    <a href="/api/stats" class="text-white hover:text-gray-200 text-sm">
+                        <i class="fas fa-chart-bar mr-1"></i>API
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        #export("content")
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-6 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-code mr-1"></i>
+                IPA Scanner - Analyze iOS applications with detailed insights
+            </p>
+            <p class="text-xs text-gray-500 mt-2">
+                Powered by <a href="https://orka.pw" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium">Orka</a> • Built with Swift + Vapor
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Global utilities
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Collapsible sections
+        document.querySelectorAll('.collapsible').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('fa-chevron-right');
+                    icon.classList.toggle('fa-chevron-down');
+                }
+            });
+        });
+
+        #export("scripts")
+    </script>
+</body>
+</html>

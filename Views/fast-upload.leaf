@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="#(language)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>#t("app.title")</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icon.png">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .app-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .performance-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        
+        .upload-area {
+            border: 3px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 60px 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f9fafb;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f3f4f6;
+        }
+        
+        .upload-area.dragging {
+            border-color: #667eea;
+            background: #ede9fe;
+        }
+        
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 20px;
+            color: #374151;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .upload-hint {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        /* Assets Scan Option Styles */
+        .assets-scan-option {
+            margin: 24px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .scan-checkbox-label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            gap: 12px;
+        }
+
+        .scan-checkbox {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .scan-option-content {
+            flex: 1;
+        }
+
+        .scan-option-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .scan-option-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .assets-scan-option:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .progress-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .progress-bar {
+            background: #f3f4f6;
+            border-radius: 10px;
+            height: 40px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            min-width: 50px;
+        }
+        
+        .status-box {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .status-message {
+            color: #374151;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .result-button {
+            display: none;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .result-button:hover {
+            transform: scale(1.02);
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .error-with-gif {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 16px;
+            display: none;
+            text-align: center;
+        }
+        
+        .error-gif {
+            max-width: 300px;
+            height: auto;
+            margin: 15px auto;
+            border-radius: 8px;
+        }
+        
+        .error-message {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .flex {
+            display: flex;
+        }
+        
+        .justify-center {
+            justify-content: center;
+        }
+        
+        .grid {
+            display: grid;
+        }
+        
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .gap-6 {
+            gap: 1.5rem;
+        }
+        
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-lg {
+            font-size: 1.125rem;
+        }
+        
+        .font-semibold {
+            font-weight: 600;
+        }
+        
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+        
+        .border-blue-300 {
+            border-color: #93c5fd;
+        }
+        
+        .border-purple-300 {
+            border-color: #c4b5fd;
+        }
+        
+        .hover\:border-blue-400:hover {
+            border-color: #60a5fa;
+        }
+        
+        .hover\:border-purple-400:hover {
+            border-color: #a78bfa;
+        }
+        
+        .bg-purple-600 {
+            background-color: #9333ea;
+        }
+        
+        .hover\:bg-purple-700:hover {
+            background-color: #7c3aed;
+        }
+        
+        .disabled\:bg-gray-400:disabled {
+            background-color: #9ca3af;
+        }
+        
+        /* Mode Toggle Buttons */
+        .mode-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .mode-toggle .bg-gray-100 {
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 4px;
+            display: flex;
+        }
+        
+        .mode-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: #6b7280;
+        }
+        
+        .mode-btn.active {
+            background: white;
+            color: #111827;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .mode-btn:hover:not(.active) {
+            color: #374151;
+        }
+        
+        /* Compare Mode Styles */
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .compare-section {
+            text-align: center;
+        }
+        
+        .compare-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .compare-title.blue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .compare-title.purple {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+        
+        .compare-upload-area {
+            border: 3px dashed #e5e7eb;
+            border-radius: 12px;
+            padding: 40px 15px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            background: #f9fafb;
+            position: relative;
+        }
+        
+        .compare-upload-area:hover {
+            background: #f3f4f6;
+        }
+        
+        .compare-upload-area.blue {
+            border-color: #3b82f6;
+        }
+        
+        .compare-upload-area.purple {
+            border-color: #8b5cf6;
+        }
+        
+        .compare-upload-area.blue:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        
+        .compare-upload-area.purple:hover {
+            border-color: #7c3aed;
+            background: #f5f3ff;
+        }
+        
+        .compare-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .compare-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+        
+        .compare-button:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Language Selector Styles */
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        
+        .language-dropdown {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+        
+        .language-dropdown:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .language-dropdown:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select class="language-dropdown" id="languageSelector">
+            <option value="en" #if(language == "en"):selected#endif>🇺🇸 English</option>
+            <option value="fr" #if(language == "fr"):selected#endif>🇫🇷 Français</option>
+            <option value="es" #if(language == "es"):selected#endif>🇪🇸 Español</option>
+            <option value="de" #if(language == "de"):selected#endif>🇩🇪 Deutsch</option>
+        </select>
+    </div>
+    
+    <div class="main-content">
+        <div class="container">
+        <div class="header">
+            <h1>
+            <img src="/icon.png" alt="IPA Scanner" class="app-icon">
+            #t("upload.title")
+        </h1>
+            <p class="subtitle">#t("upload.subtitle")</p>
+            <span class="performance-badge">#t("upload.description")</span>
+        </div>
+        
+        <div id="uploadArea" class="upload-area">
+            <div class="upload-icon">📱</div>
+            <div class="upload-text">#t("upload.drag_drop")</div>
+            <div class="upload-hint">#t("upload.or") #t("upload.button") • #t("upload.supported_formats")</div>
+            <input type="file" id="fileInput" accept=".ipa,.apk">
+        </div>
+
+        <!-- Assets Scan Info -->
+        <div class="assets-scan-option" id="assetsScanOption">
+            <div class="scan-option-content">
+                <div class="scan-option-title">ℹ️ Analyse complète des Assets.car</div>
+                <div class="scan-option-description">L'analyse peut prendre plusieurs minutes selon la taille de votre application.</div>
+            </div>
+        </div>
+        
+        <div class="progress-section" id="progressSection">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill">0%</div>
+            </div>
+            
+            <div class="status-box">
+                <div class="status-message" id="statusMessage">Initializing...</div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Time</div>
+                    <div class="stat-value" id="timer">00:00</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Size</div>
+                    <div class="stat-value" id="fileSize">0 MB</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value" id="currentStage">Uploading</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Auto-redirect to results, no button needed -->
+        <div class="error" id="errorBox"></div>
+        <div class="error-with-gif" id="errorWithGif">
+            <div class="error-message" id="errorMessage"></div>
+            <img class="error-gif" id="errorGif" src="" alt="Error GIF" style="display: none;">
+        </div>
+        </div>
+    </div>
+
+    <script>
+        const sessionId = 'fast-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+        let progressWebSocket = null;
+        let startTime = null;
+        let timerInterval = null;
+        let analysisData = null;
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const progressSection = document.getElementById('progressSection');
+        const progressFill = document.getElementById('progressFill');
+        const statusMessage = document.getElementById('statusMessage');
+        const timer = document.getElementById('timer');
+        const fileSize = document.getElementById('fileSize');
+        const currentStage = document.getElementById('currentStage');
+        // const resultButton = document.getElementById('resultButton'); // Removed since we auto-redirect
+        const errorBox = document.getElementById('errorBox');
+        const errorWithGif = document.getElementById('errorWithGif');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorGif = document.getElementById('errorGif');
+        
+        // Setup WebSocket connection
+        function setupWebSocket() {
+            return new Promise((resolve) => {
+                const wsUrl = `ws://#(wsHost)/ws/progress/${sessionId}`;
+                progressWebSocket = new WebSocket(wsUrl);
+                
+                progressWebSocket.onopen = () => {
+                    console.log('✅ WebSocket connected');
+                    resolve();
+                };
+                
+                progressWebSocket.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        console.log('WebSocket message:', data);
+                        
+                        // Force update progress
+                        const percent = parseInt(data.progress) || 0;
+                        const message = data.message || 'Processing...';
+                        
+                        updateProgress(percent, message);
+                        
+                        // Update stage indicator
+                        if (data.stage) {
+                            const stageNames = {
+                                'uploading': 'Uploading',
+                                'validating': 'Validating',
+                                'parsing': 'Parsing',
+                                'analyzing': 'Analyzing',
+                                'complete': 'Complete'
+                            };
+                            currentStage.textContent = stageNames[data.stage] || 'Processing';
+                        }
+                        
+                        if (data.stage === 'complete' || percent === 100) {
+                            onComplete();
+                        }
+                    } catch (e) {
+                        console.error('WebSocket message error:', e);
+                    }
+                };
+                
+                progressWebSocket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+            });
+        }
+        
+        // File selection
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const fileName = file.name.toLowerCase();
+                
+                if (fileName.endsWith('.apk')) {
+                    // Show troll message for APK files
+                    const androidMessages = {
+                        'fr': '😂 Si tu veux optimiser ton APK, commence par le porter sur iOS, sinon c\'est trop de boulot pour rien.',
+                        'en': '😂 If you want to optimize your APK, start by porting it to iOS, otherwise it\'s too much work for nothing.',
+                        'es': '😂 Si quieres optimizar tu APK, empieza por portarlo a iOS, si no es demasiado trabajo para nada.',
+                        'de': '😂 Wenn du deine APK optimieren willst, portiere sie erst auf iOS, sonst ist es zu viel Arbeit für nichts.'
+                    };
+                    const userLang = document.documentElement.lang || 'en';
+                    showError(androidMessages[userLang] || androidMessages['en'], true); // true = show GIF
+                } else if (fileName.endsWith('.ipa')) {
+                    handleFile(file);
+                } else {
+                    showError('#t("errors.invalid_format")');
+                }
+            }
+        });
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragging');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragging');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                const fileName = file.name.toLowerCase();
+                
+                if (fileName.endsWith('.apk')) {
+                    // Show troll message for APK files
+                    const androidMessages = {
+                        'fr': '😂 Si tu veux optimiser ton APK, commence par le porter sur iOS, sinon c\'est trop de boulot pour rien.',
+                        'en': '😂 If you want to optimize your APK, start by porting it to iOS, otherwise it\'s too much work for nothing.',
+                        'es': '😂 Si quieres optimizar tu APK, empieza por portarlo a iOS, si no es demasiado trabajo para nada.',
+                        'de': '😂 Wenn du deine APK optimieren willst, portiere sie erst auf iOS, sonst ist es zu viel Arbeit für nichts.'
+                    };
+                    const userLang = document.documentElement.lang || 'en';
+                    showError(androidMessages[userLang] || androidMessages['en'], true); // true = show GIF
+                } else if (fileName.endsWith('.ipa')) {
+                    handleFile(file);
+                } else {
+                    showError('#t("errors.invalid_format")');
+                }
+            }
+        });
+        
+        async function handleFile(file) {
+            const fileSizeMB = (file.size / 1048576).toFixed(1);
+            console.log(`📦 File: ${file.name}, Size: ${fileSizeMB}MB`);
+            
+            fileSize.textContent = `${fileSizeMB} MB`;
+            
+            // Setup UI
+            uploadArea.style.display = 'none';
+            document.getElementById('assetsScanOption').style.display = 'none';
+            progressSection.style.display = 'block';
+            statusMessage.textContent = 'Connecting to server...';
+            
+            // Setup WebSocket first
+            await setupWebSocket();
+            
+            // Start timer
+            startTimer();
+            
+            // Start upload
+            uploadFast(file);
+        }
+        
+        async function uploadFast(file) {
+            try {
+                const uploadStart = performance.now();
+                statusMessage.textContent = '⬆️ Uploading file...';
+                // Don't set progress here, let WebSocket handle it
+                
+                // Read file as ArrayBuffer
+                const buffer = await file.arrayBuffer();
+                
+                // Don't override progress with upload percentage
+                // The server will send real progress via WebSocket
+                
+                // Assets scan is always enabled
+                const detailedAssetsScan = true;
+                
+                // Upload with raw binary
+                const response = await fetch(`/upload-fast?sessionId=${sessionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/octet-stream',
+                        'X-Session-Id': sessionId,
+                    },
+                    body: buffer
+                });
+                
+                console.log(`⚡ Upload request sent successfully`);
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success && result.data) {
+                        analysisData = result.data;
+                        // Auto-redirect to results instead of showing button
+                        setTimeout(() => {
+                            openResultsPage(analysisData);
+                        }, 1000); // Short delay to show completion
+                    }
+                } else {
+                    const error = await response.text();
+                    throw new Error(error || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('❌ Upload error:', error);
+                showError(error.message);
+                stopTimer();
+            }
+        }
+        
+        function updateProgress(percent, message) {
+            console.log(`📊 Updating progress: ${percent}% - ${message}`);
+            const width = Math.max(percent, 5);
+            progressFill.style.width = width + '%';
+            progressFill.textContent = percent + '%';
+            statusMessage.textContent = message;
+            
+            // Force repaint
+            progressFill.offsetHeight;
+        }
+        
+        function startTimer() {
+            startTime = performance.now();
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((performance.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                timer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 100);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+        }
+        
+        function onComplete() {
+            stopTimer();
+            statusMessage.textContent = '✅ Analysis complete! Redirecting to results...';
+            currentStage.textContent = 'Complete';
+            const totalTime = ((performance.now() - startTime) / 1000).toFixed(1);
+            console.log(`✅ Total time: ${totalTime}s`);
+        }
+        
+        function showError(message, showGif = false) {
+            if (showGif) {
+                // Hide regular error box
+                errorBox.style.display = 'none';
+                
+                // Show error with GIF
+                errorMessage.textContent = message;
+                
+                // Array of Tenor GIF URLs (direct GIF URLs)
+                const gifs = [
+                    'https://media.tenor.com/UZJd1pjj4NMAAAAC/huh-confused.gif', // Huh confused
+                    'https://media1.tenor.com/m/8jlC25Qb-jEAAAAC/spiderman-funny.gif', // Spiderman funny laugh
+                    'https://media1.tenor.com/m/06f5Mp7siJ8AAAAd/sigh-ugh.gif', // Sigh ugh
+                    'https://media1.tenor.com/m/ABJoNp-nkOEAAAAd/android-slow-android.gif' // Android slow meme
+                ];
+                
+                // Select random GIF
+                const randomGif = gifs[Math.floor(Math.random() * gifs.length)];
+                errorGif.src = randomGif;
+                errorGif.style.display = 'block';
+                errorWithGif.style.display = 'block';
+            } else {
+                // Show regular error
+                errorWithGif.style.display = 'none';
+                errorBox.textContent = message;
+                errorBox.style.display = 'block';
+            }
+        }
+        
+        function openResultsPage(data) {
+            // Store data in localStorage for the results page
+            localStorage.setItem('analysisData', JSON.stringify(data));
+            
+            // Navigate to results page in the same window
+            window.location.href = '/results';
+        }
+        
+        // Language selector functionality
+        document.getElementById('languageSelector').addEventListener('change', function(e) {
+            const selectedLanguage = e.target.value;
+            
+            // Send language change request
+            fetch('/language/set', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    language: selectedLanguage,
+                    redirectTo: window.location.pathname
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to apply new language
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error changing language:', error);
+            });
+        });
+    </script>
+    
+    <!-- Footer with language selector -->
+    <footer style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 0 20px;">
+            <div style="color: white; font-size: 12px;">
+                Powered by 🥖 <a href="https://orka.pw" target="_blank" style="color: white; text-decoration: underline;">Orka</a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <!-- Buy Me a Coffee button (small) -->
+                <a href="https://www.buymeacoffee.com/horka_tv" target="_blank" style="display: inline-flex; align-items: center; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); border-radius: 20px; padding: 6px 14px; text-decoration: none; color: white; font-size: 13px; font-weight: 500; border: 1px solid rgba(255, 255, 255, 0.2); transition: all 0.3s; white-space: nowrap;" onmouseover="this.style.background='rgba(255, 255, 255, 0.25)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.15)'">
+                    <span style="margin-right: 6px; font-size: 16px;">☕</span> Support
+                </a>
+                <label style="color: white; font-weight: 500; font-size: 14px;">#t("navigation.language"):</label>
+            <select id="footerLanguageSelector" style="padding: 8px 15px; border-radius: 8px; border: none; background: white; color: #333; font-size: 14px; cursor: pointer; min-width: 150px;">
+                <option value="fr" #if(language == "fr"):selected#endif>🇫🇷 Français</option>
+                <option value="en" #if(language == "en"):selected#endif>🇺🇸 English</option>
+                <option value="es" #if(language == "es"):selected#endif>🇪🇸 Español</option>
+                <option value="de" #if(language == "de"):selected#endif>🇩🇪 Deutsch</option>
+            </select>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Footer language selector functionality
+        document.getElementById('footerLanguageSelector').addEventListener('change', function(e) {
+            const selectedLanguage = e.target.value;
+            
+            // Send language change request
+            fetch('/language/set', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    language: selectedLanguage,
+                    redirectTo: window.location.pathname
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to apply new language
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error changing language:', error);
+            });
+        });
+    </script>
+</body>
+</html>
