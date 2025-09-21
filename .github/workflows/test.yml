@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    container: swift:5.9
+    container: swift:6.0
     
     steps:
       - name: Checkout code
