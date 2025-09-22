@@ -17,6 +17,7 @@ public actor AssetAnalyzer: Sendable {
     public func analyzeCarFile(at path: String) throws -> CarAnalysisResult {
         let fileSize = try getFileSize(at: path)
         
+        
         // Skip extremely large files to avoid excessive processing time
         if fileSize > 200_000_000 { // > 200MB
             print("🚫 Skipping extremely large Assets.car (\(fileSize / 1_048_576)MB): \(path)")
@@ -58,13 +59,13 @@ public actor AssetAnalyzer: Sendable {
     }
     
     private func extractAssetInfoWithTimeout(from carPath: String) -> [AssetInfo] {
-        print("🔧 Running CLI assetutil on: \(carPath)")
+        print("🔧 Running cartool on: \(carPath)")
         let startTime = Date()
         
-        // Use a unique temp file for this analysis
-        let tempFile = "/tmp/assetutil_\(UUID().uuidString).json"
+        // Use a unique temp directory for cartool extraction
+        let tempDir = "/tmp/cartool_\(UUID().uuidString)"
         defer {
-            try? FileManager.default.removeItem(atPath: tempFile)
+            try? FileManager.default.removeItem(atPath: tempDir)
         }
         
         // Dynamic timeout based on file size (min 2s, up to 30s for very large files)
@@ -73,10 +74,10 @@ public actor AssetAnalyzer: Sendable {
         
         print("🔧 Using \(timeoutSeconds)s timeout for \(fileSize / 1_048_576)MB file")
         
-        // Simple CLI command with dynamic timeout using Process
+        // Create temp directory and run cartool
         let process = Process()
         process.launchPath = "/bin/sh"
-        process.arguments = ["-c", "timeout \(timeoutSeconds) assetutil -I '\(carPath)' > '\(tempFile)' 2>/dev/null"]
+        process.arguments = ["-c", "mkdir -p '\(tempDir)' && timeout \(timeoutSeconds) cartool '\(carPath)' '\(tempDir)' 2>/dev/null"]
         
         do {
             try process.run()
@@ -99,71 +100,111 @@ public actor AssetAnalyzer: Sendable {
             }
             
         } catch {
-            print("❌ Failed to run assetutil: \(error)")
+            print("❌ Failed to run cartool: \(error)")
             return []
         }
         
         let duration = Date().timeIntervalSince(startTime)
         
-        // Check if we have output file (regardless of exit code)
-        if FileManager.default.fileExists(atPath: tempFile),
-           let outputData = try? Data(contentsOf: URL(fileURLWithPath: tempFile)),
-           let output = String(data: outputData, encoding: .utf8),
-           !output.isEmpty && !output.contains("timeout: ") {
-            print("📊 assetutil output size: \(output.count) bytes")
-            print("⏱️ assetutil completed in \(String(format: "%.2f", duration))s")
-            return parseAssetUtilJSONOutput(output)
+        // Check if cartool extracted files successfully
+        if FileManager.default.fileExists(atPath: tempDir),
+           let extractedFiles = try? FileManager.default.contentsOfDirectory(atPath: tempDir),
+           !extractedFiles.isEmpty {
+            print("📊 cartool extracted \(extractedFiles.count) files")
+            print("⏱️ cartool completed in \(String(format: "%.2f", duration))s")
+            return parseExtractedAssets(from: tempDir, extractedFiles: extractedFiles)
         }
         
         print("⏰ Timeout or no output after \(String(format: "%.2f", duration))s for \(carPath)")
         return []
     }
     
-    private func parseAssetUtilJSONOutput(_ output: String) -> [AssetInfo] {
-        guard let data = output.data(using: .utf8),
-              let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            print("⚠️ Failed to parse assetutil JSON output")
-            return []
-        }
-        
-        print("📊 Parsing \(jsonArray.count) asset entries")
+    private func parseExtractedAssets(from tempDir: String, extractedFiles: [String]) -> [AssetInfo] {
         var assets: [AssetInfo] = []
         
-        // Skip the first element which contains metadata, start from index 1
-        for i in 1..<jsonArray.count {
-            let assetDict = jsonArray[i]
+        print("📊 Analyzing \(extractedFiles.count) extracted files")
+        
+        // Analyze each extracted file
+        for fileName in extractedFiles {
+            let filePath = "\(tempDir)/\(fileName)"
             
-            guard let name = assetDict["Name"] as? String else {
+            guard let fileAttributes = try? FileManager.default.attributesOfItem(atPath: filePath),
+                  let fileSize = fileAttributes[.size] as? Int64 else {
                 continue
             }
             
-            let type = assetDict["AssetType"] as? String ?? "Unknown"
-            let idiom = assetDict["Idiom"] as? String ?? "universal"
-            let scaleValue = assetDict["Scale"] as? NSNumber ?? 1
-            let scale = "\(scaleValue)x"
-            let sizeString = assetDict["Size"] as? String ?? "0x0"
-            let renditionKey = assetDict["RenditionKey"] as? String ?? ""
-            let sizeOnDisk = (assetDict["SizeOnDisk"] as? NSNumber)?.int64Value ?? 0
+            // Determine asset type from file extension
+            let fileExtension = (fileName as NSString).pathExtension.lowercased()
+            let assetType = getAssetType(from: fileExtension)
             
-            // Extract content hash - use SHA1Digest from assetutil and convert to SHA-256 equivalent
-            let sha1Digest = assetDict["SHA1Digest"] as? String
-            let contentHash = generateContentHash(sha1Digest: sha1Digest, name: name, type: type, size: sizeString)
+            // Extract asset name (remove @2x, @3x, ~ipad suffixes)
+            let assetName = extractAssetName(from: fileName)
+            
+            // Determine idiom and scale from filename
+            let (idiom, scale) = extractIdiomAndScale(from: fileName)
+            
+            // Generate a simple hash for the file content
+            let contentHash = generateSimpleHash(for: filePath)
             
             let asset = AssetInfo(
-                name: name,
-                type: type,
+                name: assetName,
+                type: assetType,
                 idiom: idiom,
                 scale: scale,
-                size: sizeString,
-                renditionKey: renditionKey,
-                sizeOnDisk: sizeOnDisk,
+                size: "0x0", // cartool doesn't provide original dimensions
+                renditionKey: fileName,
+                sizeOnDisk: fileSize,
                 contentHash: contentHash
             )
+            
             assets.append(asset)
         }
         
-        print("✅ Successfully parsed \(assets.count) assets from \(jsonArray.count) entries")
+        print("✅ Successfully analyzed \(assets.count) assets from cartool extraction")
         return assets
+    }
+    
+    // Helper functions for cartool analysis
+    private func getAssetType(from extension: String) -> String {
+        switch `extension` {
+        case "png", "jpg", "jpeg": return "Image"
+        case "pdf": return "PDF"
+        case "json": return "Data"
+        default: return "Unknown"
+        }
+    }
+    
+    private func extractAssetName(from fileName: String) -> String {
+        let name = (fileName as NSString).deletingPathExtension
+        // Remove @2x, @3x, ~ipad suffixes
+        let cleanName = name
+            .replacingOccurrences(of: "@3x", with: "")
+            .replacingOccurrences(of: "@2x", with: "")
+            .replacingOccurrences(of: "~ipad", with: "")
+            .replacingOccurrences(of: "~iphone", with: "")
+        return cleanName
+    }
+    
+    private func extractIdiomAndScale(from fileName: String) -> (idiom: String, scale: String) {
+        if fileName.contains("~ipad") {
+            return ("tablet", fileName.contains("@2x") ? "2x" : "1x")
+        } else if fileName.contains("~iphone") {
+            return ("phone", fileName.contains("@3x") ? "3x" : (fileName.contains("@2x") ? "2x" : "1x"))
+        } else if fileName.contains("@3x") {
+            return ("universal", "3x")
+        } else if fileName.contains("@2x") {
+            return ("universal", "2x")
+        } else {
+            return ("universal", "1x")
+        }
+    }
+    
+    private func generateSimpleHash(for filePath: String) -> String? {
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) else {
+            return nil
+        }
+        let hash = SHA256.hash(data: data)
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
     
     private func generateContentHash(sha1Digest: String?, name: String, type: String, size: String) -> String? {

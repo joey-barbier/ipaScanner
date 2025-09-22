@@ -24,7 +24,12 @@ RUN apt-get update && apt-get install -y \
     tzdata \
     unzip \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    file \
+    xxd \
+    binutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -L https://github.com/steventroughtonsmith/cartool/releases/download/1.0.0/cartool -o /usr/local/bin/cartool \
+    && chmod +x /usr/local/bin/cartool
 
 # Create app user
 RUN useradd --user-group --create-home --system --skel /dev/null --home-dir /app app
